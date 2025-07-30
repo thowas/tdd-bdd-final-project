@@ -127,13 +127,6 @@ def get_products(product_id):
     return jsonify(product.serialize()), status.HTTP_200_OK
 
 
-def test_get_product_not_found(self):
-    """It should not Get a Product thats not found"""
-    self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
-    data = request.get_json()
-    self.assertIn("was not found", data["message"])
-
-
 ######################################################################
 # U P D A T E   A   P R O D U C T
 ######################################################################
@@ -141,6 +134,21 @@ def test_get_product_not_found(self):
 #
 # PLACE YOUR CODE TO UPDATE A PRODUCT HERE
 #
+@app.route("/products/<int:product_id>", methods=["PUT"])
+def update_products(product_id):
+    """
+    Update a Product
+    This endpoint will update a Product based the body that is posted
+    """
+    app.logger.info("Request to Update a product with id [%s]", product_id)
+    check_content_type("application/json")
+    product = Product.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found.")
+    product.deserialize(request.get_json())
+    product.id = product_id
+    product.update()
+    return product.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # D E L E T E   A   P R O D U C T
@@ -150,6 +158,29 @@ def test_get_product_not_found(self):
 #
 # PLACE YOUR CODE TO DELETE A PRODUCT HERE
 #
+@app.route("/products/<int:product_id>", methods=["DELETE"])
+def delete_products(product_id):
+    """
+    Delete a Product
+    This endpoint will delete a Product based the id specified in the path
+    """
+    app.logger.info("Request to Delete a product with id [%s]", product_id)
+    product = Product.find(product_id)
+    if product:
+        product.delete()
+    return "", status.HTTP_204_NO_CONTENT
+
+
+@app.route("/products", methods=["DELETE"])
+def delete_all_products():
+    """Delete all products (used for test setup)"""
+    app.logger.info("Request to delete ALL products")
+    products = Product.all()
+    for product in products:
+        product.delete()
+    return "", status.HTTP_204_NO_CONTENT
+
+
 ######################################################################
 # LIST PRODUCTS
 ######################################################################

@@ -29,6 +29,7 @@ from behave import when, then
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import expected_conditions as EC
 
 ID_PREFIX = 'product_'
 
@@ -132,3 +133,19 @@ def step_impl(context, element_name, text_string):
     )
     element.clear()
     element.send_keys(text_string)
+
+
+@when('I press the "{button_name}" button')
+def step_impl(context, button_name):
+    button_id = button_name.lower() + '-btn'
+    button = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.element_to_be_clickable((By.ID, button_id))
+    )
+    button.click()
+
+@then('I should see the message "{message}"')
+def step_impl(context, message):
+    flash = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.visibility_of_element_located((By.ID, "flash_message"))
+    )
+    assert message in flash.text

@@ -24,6 +24,7 @@ For information on Waiting until elements are present in the HTML see:
 """
 import requests
 from behave import given
+from http import HTTPStatus
 
 # HTTP Return Codes
 HTTP_200_OK = 200
@@ -41,12 +42,20 @@ def step_impl(context):
     assert(context.resp.status_code == HTTP_200_OK)
     for product in context.resp.json():
         context.resp = requests.delete(f"{rest_endpoint}/{product['id']}")
-        assert(context.resp.status_code == HTTP_204_NO_CONTENT)
+        # assert(context.resp.status_code == HTTP_204_NO_CONTENT)
+        assert context.resp.status_code == HTTP_204_NO_CONTENT, \
+            f"Expected 204 but got {context.resp.status_code}: {context.resp.text}"
 
     #
     # load the database with new products
     #
     for row in context.table:
-        #
-        # ADD YOUR CODE HERE TO CREATE PRODUCTS VIA THE REST API
-        #
+        payload = {
+            "name": row["name"],
+            "description": row["description"],
+            "price": float(row["price"]),
+            "available": row["available"] == "True",
+            "category": row["category"]
+        }
+        context.resp = requests.post(rest_endpoint, json=payload)
+        assert context.resp.status_code == HTTP_201_CREATED
