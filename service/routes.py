@@ -90,7 +90,8 @@ def create_products():
     # Uncomment this line of code once you implement READ A PRODUCT
     #
     # location_url = url_for("get_products", product_id=product.id, _external=True)
-    location_url = "/"  # delete once READ is implemented
+    # location_url = "/"  # delete once READ is implemented
+    location_url = url_for("get_products", product_id=product.id, _external=True)
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
@@ -109,6 +110,28 @@ def create_products():
 #
 # PLACE YOUR CODE HERE TO READ A PRODUCT
 #
+
+@app.route("/products/<int:product_id>", methods=["GET"])
+def get_products(product_id):
+    """
+    Retrieve a single Product
+    This endpoint will return a Product based on it's id
+    """
+    app.logger.info("Request to Retrieve a product with id [%s]", product_id)
+    product = Product.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id '{product_id}' was not found.")
+    app.logger.info("Returning product: %s", product.name)
+    # return product.serialize(), status.HTTP_200_OK
+    return jsonify(product.serialize()), status.HTTP_200_OK
+
+
+def test_get_product_not_found(self):
+    """It should not Get a Product thats not found"""
+    self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+    data = request.get_json()
+    self.assertIn("was not found", data["message"])
+
 
 ######################################################################
 # U P D A T E   A   P R O D U C T

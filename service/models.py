@@ -104,6 +104,7 @@ class Product(db.Model):
         logger.info("Saving %s", self.name)
         if not self.id:
             raise DataValidationError("Update called with empty ID field")
+        db.session.add(self)
         db.session.commit()
 
     def delete(self):
@@ -218,7 +219,8 @@ class Product(db.Model):
         price_value = price
         if isinstance(price, str):
             price_value = Decimal(price.strip(' "'))
-        return cls.query.filter(cls.price == price_value)
+        # return cls.query.filter(cls.price == price_value)
+        return cls.query.filter(cls.price == price_value).all()
 
     @classmethod
     def find_by_availability(cls, available: bool = True) -> list:
