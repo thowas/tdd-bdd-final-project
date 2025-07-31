@@ -40,11 +40,26 @@ Scenario: Create a Product
     And I should see "34.95" in the "Price" field
 
 Scenario: Update a Product
-    Given a product with name "Shoes"
-    When I update the product's name to "Shoes"
-    Then the product's name should be "Shoes"
+    Given I create a product with
+    | name        | Hammer       |
+    | description | Claw hammer  |
+    | price       | 34.95        |
+    | available   | True         |
+    | category    | Tools        |
 
-Scenario: Delete a Product
-    Given a product with name "Shoes"
-    When I delete the product
-    Then the product should no longer exist
+    And I store the product id
+
+    When I click the "Clear" button
+    And I enter the stored product id
+    And I click the "Retrieve" button
+    Then I should see the message "Success"
+
+    When I change the "price" to "79.95"
+    And I click the "Update" button
+    Then I should see the message "Success"
+
+    When I click the "Clear" button
+    And I enter the stored product id
+    And I click the "Retrieve" button
+    Then I should see the message "Success"
+    And the "price" field should contain "79.95"

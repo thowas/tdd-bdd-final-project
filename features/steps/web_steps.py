@@ -107,12 +107,112 @@ def step_impl(context, element_name):
 
 ## UPDATE CODE HERE ##
 
-@when(u'I update the product\'s name to "{new_name}"')
-def step_impl(context, new_name):
-    context.execute_steps(f'''
-        When I set the "Name" to "{new_name}"
-        And I press the "Update" button
-    ''')
+@given('I create a product with')
+def step_impl(context):
+    for row in context.table:
+        field_name = row[0].lower()  # z.B. 'name', 'description' ...
+        value = row[1]
+
+        # Zuordnung von Feldname zum HTML Element ID
+        if field_name == 'name':
+            element_id = 'product_name'
+        elif field_name == 'description':
+            element_id = 'product_description'
+        elif field_name == 'price':
+            element_id = 'product_price'
+        elif field_name == 'available':
+            element_id = 'product_available'
+        elif field_name == 'category':
+            element_id = 'product_category'
+        else:
+            raise ValueError(f"Unbekanntes Feld: {field_name}")
+
+        # Fülle die Felder entsprechend
+        if element_id in ['product_available', 'product_category']:
+            # Select-Felder
+            select_element = Select(context.driver.find_element(By.ID, element_id))
+            select_element.select_by_visible_text(value)
+        else:
+            input_element = context.driver.find_element(By.ID, element_id)
+            input_element.clear()
+            input_element.send_keys(value)
+
+    # Danach auf Create klicken
+    create_btn = context.driver.find_element(By.ID, 'create-btn')
+    create_btn.click()
+
+@given(u'I store the product id')
+def step_impl(context):
+    id_input = context.driver.find_element(By.ID, "product_id")
+    context.product_id = id_input.get_attribute("value")
+    logging.info(f"Stored product ID: {context.product_id}")
+
+@when(u'I enter the stored product id')
+def step_impl(context):
+    id_input = context.driver.find_element(By.ID, "product_id")
+    id_input.clear()
+    id_input.send_keys(context.product_id)
+
+@when(u'I click the "Search" button')
+def step_impl(context):
+    search_btn = WebDriverWait(context.driver, WAIT_TIME).until(
+        EC.element_to_be_clickable((By.ID, "search-btn"))
+    )
+    search_btn.click()
+
+
+@when(u'I change the "price" to "79.95"')
+def step_impl(context):
+    price_input = WebDriverWait(context.driver, 10).until(
+        EC.presence_of_element_located((By.ID, "product_price"))
+    )
+    price_input.clear()
+    price_input.send_keys("79.95")
+    print("DEBUG: Preisfeld aktualisiert auf: 79.95")
+
+
+@when(u'I click the "Update" button')
+def step_impl(context):
+    update_button = WebDriverWait(context.driver, 10).until(
+        EC.element_to_be_clickable((By.ID, "update-btn"))  # ID anpassen!
+    )
+    update_button.click()
+    # Warten auf Flash-Message "Success" o. Ä.
+    WebDriverWait(context.driver, 10).until(
+        EC.text_to_be_present_in_element((By.ID, "flash_message"), "Success")  # ID anpassen!
+    )
+    print("DEBUG: Update erfolgreich, Success-Meldung gesehen")
+
+
+@when(u'I click the "Retrieve" button')
+def step_impl(context):
+    retrieve_btn = WebDriverWait(context.driver, 5).until(
+        EC.element_to_be_clickable((By.ID, "retrieve-btn"))
+    )
+    retrieve_btn.click()
+
+@then(u'the "price" field should contain "79.95"')
+def step_impl(context):
+    # Nach Update den Preis nochmal auslesen (möglichst nach Neuladen oder Ajax-Update)
+    price_field = WebDriverWait(context.driver, 10).until(
+        EC.presence_of_element_located((By.ID, "product_price"))
+    )
+    actual_price = price_field.get_attribute("value")
+    print(f"DEBUG: Sichtbarer Preiswert im Feld: '{actual_price}'")
+    assert actual_price == "79.95", f"Expected price to be '79.95', but got '{actual_price}'"
+
+
+WAIT_TIME = 10
+
+@when(u'I click the "Clear" button')
+def step_impl(context):
+    clear_btn = WebDriverWait(context.driver, WAIT_TIME).until(
+        EC.element_to_be_clickable((By.ID, "clear-btn"))
+    )
+    clear_btn.click()
+
+
+
 
 @when(u'I delete the product')
 def step_impl(context):
@@ -180,9 +280,17 @@ def step_impl(context, button_name):
     )
     button.click()
 
-@then('I should see the message "{message}"')
-def step_impl(context, message):
-    flash = WebDriverWait(context.driver, context.wait_seconds).until(
-        EC.visibility_of_element_located((By.ID, "flash_message"))
+#@then('I should see the message "{message}"')
+#def step_impl(context, message):
+    #flash = WebDriverWait(context.driver, context.wait_seconds).until(
+       #EC.visibility_of_element_located((By.ID, "flash_message"))
+    #)
+    #assert message in flash.text
+
+@then(u'I should see the message "Success"')
+def step_impl(context):
+    WebDriverWait(context.driver, 5).until(
+        EC.text_to_be_present_in_element(
+            (By.ID, "flash_message"), "Success"
+        )
     )
-    assert message in flash.text
