@@ -108,10 +108,6 @@ def create_products():
 # R E A D   A   P R O D U C T
 ######################################################################
 
-#
-# PLACE YOUR CODE HERE TO READ A PRODUCT
-#
-
 @app.route("/products/<int:product_id>", methods=["GET"])
 def get_products(product_id):
     """
@@ -191,6 +187,7 @@ def list_products():
     products = []
     name = request.args.get("name")
     category = request.args.get("category")
+    available = request.args.get("available")
 
     if name:
         app.logger.info("Find by name: %s", name)
@@ -200,6 +197,10 @@ def list_products():
         # create enum from string
         category_value = getattr(Category, category.upper())
         products = Product.find_by_category(category_value)
+    elif available is not None:
+        is_available = available.lower() == "true"
+        app.logger.info("Find by availability: %s", is_available)
+        products = Product.find_by_availability(is_available)
     else:
         app.logger.info("Find all")
         products = Product.all()
