@@ -38,3 +38,13 @@ Scenario: Create a Product
     And I should see "True" in the "Available" dropdown
     And I should see "Tools" in the "Category" dropdown
     And I should see "34.95" in the "Price" field
+
+Scenario: Update a Product
+    Given a product with name "Shoes"
+    When I update the product's name to "Shoes"
+    Then the product's name should be "Shoes"
+
+Scenario: Delete a Product
+    Given a product with name "Shoes"
+    When I delete the product
+    Then the product should no longer exist

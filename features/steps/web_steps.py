@@ -107,6 +107,43 @@ def step_impl(context, element_name):
 
 ## UPDATE CODE HERE ##
 
+@when(u'I update the product\'s name to "{new_name}"')
+def step_impl(context, new_name):
+    context.execute_steps(f'''
+        When I set the "Name" to "{new_name}"
+        And I press the "Update" button
+    ''')
+
+@when(u'I delete the product')
+def step_impl(context):
+    context.execute_steps('When I press the "Delete" button')
+
+@given(u'a product with name "{product_name}"')
+def step_impl(context, product_name):
+    # Simuliere das Auffinden des Produkts im UI
+    # z.B. Produkt-ID herausfinden und ins Formular einfüllen
+    # Hier einfach Name ins Name-Feld setzen und Retrieve drücken
+    context.execute_steps(f'''
+        When I set the "Name" to "{product_name}"
+        And I press the "Retrieve" button
+    ''')
+
+@then(u'the product\'s name should be "{expected_name}"')
+def step_impl(context, expected_name):
+    element_id = ID_PREFIX + 'name'
+    element = context.driver.find_element_by_id(element_id)
+    actual_name = element.get_attribute('value')
+    assert actual_name == expected_name, f'Expected name to be {expected_name}, but got {actual_name}'
+
+@then(u'the product should no longer exist')
+def step_impl(context):
+    context.execute_steps('When I press the "Retrieve" button')
+    flash = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.visibility_of_element_located((By.ID, "flash_message"))
+    )
+    actual_text = flash.text.lower()
+    assert 'not found' in actual_text, f"Erwartet 'not found' in Flash, aber bekommen: '{actual_text}'"
+
 ##################################################################
 # This code works because of the following naming convention:
 # The id field for text input in the html is the element name
