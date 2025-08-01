@@ -71,7 +71,7 @@ Scenario: Reading a product
     | price       | 34.95        |
     | available   | True         |
     | category    | Tools        |
-    
+
     And I store the product id
     When I click the "Clear" button
     And I enter the stored product id
@@ -82,3 +82,26 @@ Scenario: Reading a product
     And I should see "True" in the "Available" dropdown
     And I should see "Tools" in the "Category" dropdown
     And I should see "34.95" in the "Price" field
+
+
+Scenario: Deleting a Product
+    When I visit the "Home Page"
+    And I clear the form
+    Given I create a product with
+    | name        | Saw        |
+    | description | Power tool |
+    | category    | Tools      |
+    | available   | True       |
+    | price       | 49.99      |
+    Then I should see the message "Success"
+    Then I store the product id
+
+    When I clear the form
+    And I enter the stored product id
+    And I click the "Delete" button
+    Then I should see the message "Product has been Deleted!"
+
+    When I clear the form
+    And I enter the stored product id
+    And I click the "Retrieve" button
+    Then the product should no longer exist

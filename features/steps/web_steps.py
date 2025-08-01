@@ -148,6 +148,31 @@ def step_impl(context):
     context.product_id = id_input.get_attribute("value")
     logging.info(f"Stored product ID: {context.product_id}")
 
+
+@then(u'I store the product id')
+def step_impl(context):
+    id_input = WebDriverWait(context.driver, 10).until(
+        EC.presence_of_element_located((By.ID, "product_id"))
+    )
+    context.product_id = id_input.get_attribute("value")
+    assert context.product_id, "Product ID could not be read or is empty"
+    logging.info(f"[STORE] Stored product ID: {context.product_id}")
+
+@when('I clear the form')
+def step_impl(context):
+    try:
+        clear_btn = WebDriverWait(context.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "clear-btn"))
+        )
+        clear_btn.click()
+        logging.info("Clear button clicked successfully.")
+        print("DEBUG: Page Source:")
+        print(context.driver.page_source)
+    except TimeoutException:
+        context.driver.save_screenshot("clear_form_timeout.png")
+        raise AssertionError("Clear button ('clear-btn') was not found or not clickable.")
+    
+
 @when(u'I enter the stored product id')
 def step_impl(context):
     id_input = context.driver.find_element(By.ID, "product_id")
@@ -202,7 +227,6 @@ def step_impl(context):
     print(f"DEBUG: Sichtbarer Preiswert im Feld: '{actual_price}'")
     assert actual_price == "79.95", f"Expected price to be '79.95', but got '{actual_price}'"
 
-
 WAIT_TIME = 10
 
 @when(u'I click the "Clear" button')
@@ -213,11 +237,21 @@ def step_impl(context):
     clear_btn.click()
 
 
-
-
 @when(u'I delete the product')
 def step_impl(context):
     context.execute_steps('When I press the "Delete" button')
+
+@when('I click the "Delete" button')
+def step_impl(context):
+    try:
+        delete_btn = WebDriverWait(context.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "delete-btn"))
+        )
+        delete_btn.click()
+        logging.info("Clicked the Delete button.")
+    except TimeoutException:
+        context.driver.save_screenshot("delete_btn_timeout.png")
+        raise AssertionError("Delete button ('delete-btn') was not found or not clickable.")
 
 @given(u'a product with name "{product_name}"')
 def step_impl(context, product_name):
@@ -252,16 +286,27 @@ def step_impl(context):
 # We can then lowercase the name and prefix with pet_ to get the id
 ##################################################################
 
+#@then('I should see "{text_string}" in the "{element_name}" field')
+#def step_impl(context, text_string, element_name):
+    #element_id = ID_PREFIX + element_name.lower().replace(' ', '_')
+    #found = WebDriverWait(context.driver, context.wait_seconds).until(
+        #expected_conditions.text_to_be_present_in_element_value(
+            #(By.ID, element_id),
+            #text_string
+        #)
+    #)
+    #assert(found)
+
 @then('I should see "{text_string}" in the "{element_name}" field')
 def step_impl(context, text_string, element_name):
     element_id = ID_PREFIX + element_name.lower().replace(' ', '_')
-    found = WebDriverWait(context.driver, context.wait_seconds).until(
-        expected_conditions.text_to_be_present_in_element_value(
-            (By.ID, element_id),
-            text_string
-        )
+    input_field = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.presence_of_element_located((By.ID, element_id))
     )
-    assert(found)
+    actual_value = input_field.get_attribute("value")
+    print(f"DEBUG: Field '{element_id}' has value: '{actual_value}'")
+    assert actual_value == text_string, f"Expected '{text_string}' in field '{element_name}', but got '{actual_value}'"
+    
 
 @when('I change "{element_name}" to "{text_string}"')
 def step_impl(context, element_name, text_string):
@@ -283,15 +328,22 @@ def step_impl(context, button_name):
 
 #@then('I should see the message "{message}"')
 #def step_impl(context, message):
-    #flash = WebDriverWait(context.driver, context.wait_seconds).until(
+    #flash = WebDriverWait(context.driver, 10).until(
        #EC.visibility_of_element_located((By.ID, "flash_message"))
     #)
     #assert message in flash.text
 
-@then(u'I should see the message "Success"')
-def step_impl(context):
-    WebDriverWait(context.driver, 5).until(
-        EC.text_to_be_present_in_element(
-            (By.ID, "flash_message"), "Success"
+@then('I should see the message "{message_text}"')
+def step_impl(context, message_text):
+    try:
+        alert_box = WebDriverWait(context.driver, 10).until(
+            EC.visibility_of_element_located((By.ID, "flash_message"))
         )
-    )
+        assert message_text in alert_box.text, \
+            f'Expected message "{message_text}" not found in "{alert_box.text}"'
+        logging.info(f'Success message "{message_text}" found.')
+    except TimeoutException:
+        context.driver.save_screenshot("message_timeout.png")
+        print("DEBUG: Page source on timeout:")
+        print(context.driver.page_source)
+        raise AssertionError(f'Message "{message_text}" not found within timeout.')
