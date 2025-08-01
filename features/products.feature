@@ -41,12 +41,9 @@ Scenario: Create a Product
 
 Scenario: Update a Product
     Given I create a product with
-    | name        | Hammer       |
-    | description | Claw hammer  |
-    | price       | 34.95        |
-    | available   | True         |
-    | category    | Tools        |
-
+    | name     | description | price | available | category |
+    | Hammer   | Claw hammer | 34.95 | True      | Tools    |
+   
     And I store the product id
 
     When I click the "Clear" button
@@ -66,11 +63,8 @@ Scenario: Update a Product
 
 Scenario: Reading a product
     Given I create a product with
-    | name        | Hammer       |
-    | description | Claw hammer  |
-    | price       | 34.95        |
-    | available   | True         |
-    | category    | Tools        |
+    | name     | description | price | available | category |
+    | Hammer   | Claw hammer | 34.95 | True      | Tools    |
 
     And I store the product id
     When I click the "Clear" button
@@ -88,11 +82,8 @@ Scenario: Deleting a Product
     When I visit the "Home Page"
     And I clear the form
     Given I create a product with
-    | name        | Saw        |
-    | description | Power tool |
-    | category    | Tools      |
-    | available   | True       |
-    | price       | 49.99      |
+    | name     | description | price | available | category |
+    | Saw      | Power tool  | 49.99 | True      | Tools    |
     Then I should see the message "Success"
     Then I store the product id
 
@@ -105,3 +96,17 @@ Scenario: Deleting a Product
     And I enter the stored product id
     And I click the "Retrieve" button
     Then the product should no longer exist
+
+Scenario: LISTING ALL
+    When I visit the "Home Page"
+    Given I create a product with
+    | name     | description | price | available | category |
+    | Burger   | Big Mac     | 5.99  | True      | Food     |
+    | Fanta    | Orange soda | 2.49  | True      | Food     |
+    | Keyboard | Mechanical  | 29.90 | True      | Tools    |
+
+    When I click the "Clear" button
+    And I click the "Search" button
+    Then I should see "Burger" in the search results
+    And I should see "Fanta" in the search results
+    And I should see "Keyboard" in the search results

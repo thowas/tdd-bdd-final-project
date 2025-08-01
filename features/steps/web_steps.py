@@ -70,6 +70,13 @@ def step_impl(context, text, element_name):
     element = Select(context.driver.find_element(By.ID, element_id))
     assert(element.first_selected_option.text == text)
 
+@then('I should see "{product_name}" in the search results')
+def step_impl(context, product_name):
+    table = WebDriverWait(context.driver, 10).until(
+        EC.presence_of_element_located((By.ID, "search_results"))
+    )
+    assert product_name in table.text, f'Expected "{product_name}" in search results, but not found.\n\nSearch Results:\n{table.text}'
+
 @then('the "{element_name}" field should be empty')
 def step_impl(context, element_name):
     element_id = ID_PREFIX + element_name.lower().replace(' ', '_')
@@ -108,13 +115,12 @@ def step_impl(context, element_name):
 
 ## UPDATE CODE HERE ##
 
-@given('I create a product with')
+@given('I create a product with  eeeee')
 def step_impl(context):
     for row in context.table:
-        field_name = row[0].lower()  # z.B. 'name', 'description' ...
+        field_name = row[0].lower()
         value = row[1]
 
-        # Zuordnung von Feldname zum HTML Element ID
         if field_name == 'name':
             element_id = 'product_name'
         elif field_name == 'description':
@@ -128,7 +134,6 @@ def step_impl(context):
         else:
             raise ValueError(f"Unbekanntes Feld: {field_name}")
 
-        # Fülle die Felder entsprechend
         if element_id in ['product_available', 'product_category']:
             # Select-Felder
             select_element = Select(context.driver.find_element(By.ID, element_id))
@@ -137,10 +142,38 @@ def step_impl(context):
             input_element = context.driver.find_element(By.ID, element_id)
             input_element.clear()
             input_element.send_keys(value)
-
-    # Danach auf Create klicken
+    
     create_btn = context.driver.find_element(By.ID, 'create-btn')
     create_btn.click()
+
+
+@given('I create a product with')
+def step_impl(context):
+    for row in context.table:
+        for heading in row.headings:
+            element_id = f"product_{heading.lower()}"
+            try:
+                element = context.driver.find_element(By.ID, element_id)
+            except Exception as e:
+                logging.error(f"Element with ID '{element_id}' not found: {e}")
+                raise
+          
+            tag_name = element.tag_name.lower()
+
+            if tag_name == "select":
+                select = Select(element)
+                select.select_by_visible_text(row[heading])
+                logging.info(f"Selected '{row[heading]}' in '{element_id}'")
+            elif tag_name == "input" or tag_name == "textarea":
+                element.clear()
+                element.send_keys(row[heading])
+                logging.info(f"Filled input '{element_id}' with '{row[heading]}'")
+            else:
+                logging.warning(f"Unbekannter Feldtyp '{tag_name}' für '{element_id}'")
+
+        create_btn = context.driver.find_element(By.ID, 'create-btn')
+        create_btn.click()
+
 
 @given(u'I store the product id')
 def step_impl(context):
@@ -181,7 +214,7 @@ def step_impl(context):
 
 @when(u'I click the "Search" button')
 def step_impl(context):
-    search_btn = WebDriverWait(context.driver, WAIT_TIME).until(
+    search_btn = WebDriverWait(context.driver, 10).until(
         EC.element_to_be_clickable((By.ID, "search-btn"))
     )
     search_btn.click()
