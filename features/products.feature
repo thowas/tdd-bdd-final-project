@@ -8,7 +8,7 @@ Background:
         | name       | description     | price   | available | category   |
         | Hat        | A red fedora    | 59.95   | True      | CLOTHS     |
         | Shoes      | Blue shoes      | 120.50  | False     | CLOTHS     |
-        | Big Mac    | 1/4 lb burger   | 5.99    | True      | FOOD       |
+        | Burger    | 1/4 lb burger   | 5.99    | True      | FOOD       |
         | Sheets     | Full bed sheets | 87.00   | True      | HOUSEWARES |
 
 Scenario: The server is running
@@ -110,3 +110,16 @@ Scenario: LISTING ALL
     Then I should see "Burger" in the search results
     And I should see "Fanta" in the search results
     And I should see "Keyboard" in the search results
+
+Scenario: Search products by category
+    Given the following category
+    | name     | description | price | available | category |
+    | Burger   | Big Mac     | 5.99  | True      | Food     |
+    | Fanta    | Orange soda | 2.49  | True      | Food     |
+    | Keyboard | Mechanical  | 29.90 | True      | Tools    |
+    When I click the "Clear" button
+    And I select "Food" in the "category" dropdown
+    And I click the "Search" button
+    Then I should see "Burger" in the search results
+    And I should see "Fanta" in the search results
+    And I should not see "Keyboard" in the search results

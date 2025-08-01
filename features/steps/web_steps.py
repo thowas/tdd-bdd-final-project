@@ -38,9 +38,7 @@ ID_PREFIX = 'product_'
 def step_impl(context):
     """ Make a call to the base URL """
     context.driver.get(context.base_url)
-    # Uncomment next line to take a screenshot of the web page
-    # context.driver.save_screenshot('home_page.png')
-
+    
 @then('I should see "{message}" in the title')
 def step_impl(context, message):
     """ Check the document title for a message """
@@ -135,7 +133,6 @@ def step_impl(context):
             raise ValueError(f"Unbekanntes Feld: {field_name}")
 
         if element_id in ['product_available', 'product_category']:
-            # Select-Felder
             select_element = Select(context.driver.find_element(By.ID, element_id))
             select_element.select_by_visible_text(value)
         else:
@@ -180,6 +177,43 @@ def step_impl(context):
     id_input = context.driver.find_element(By.ID, "product_id")
     context.product_id = id_input.get_attribute("value")
     logging.info(f"Stored product ID: {context.product_id}")
+
+
+@given('the following category')
+def step_impl(context):
+    for row in context.table:
+        for heading in row.headings:
+            element_id = ID_PREFIX + heading.lower()
+            try:
+                element = WebDriverWait(context.driver, 10).until(
+                    EC.presence_of_element_located((By.ID, element_id))
+                )
+            except Exception as e:
+                logging.error(f"Element {element_id} nicht gefunden: {e}")
+                raise
+
+            tag_name = element.tag_name.lower()
+
+            if tag_name == 'select':
+                select = Select(element)
+                select.select_by_visible_text(row[heading])
+                logging.info(f"Select-Feld {element_id} auf '{row[heading]}' gesetzt")
+            elif tag_name in ('input', 'textarea'):
+                element.clear()
+                element.send_keys(row[heading])
+                logging.info(f"Input-Feld {element_id} mit '{row[heading]}' befüllt")
+            else:
+                logging.warning(f"Unbekannter Feldtyp '{tag_name}' für {element_id}")
+
+        create_btn = WebDriverWait(context.driver, WAIT_TIME).until(
+            EC.element_to_be_clickable((By.ID, 'create-btn'))
+        )
+        create_btn.click()
+        logging.info("Create-Button geklickt")
+       
+        WebDriverWait(context.driver, WAIT_TIME).until(
+            EC.text_to_be_present_in_element((By.ID, "flash_message"), "Success")
+        )
 
 
 @then(u'I store the product id')
@@ -233,10 +267,9 @@ def step_impl(context):
 @when(u'I click the "Update" button')
 def step_impl(context):
     update_button = WebDriverWait(context.driver, 10).until(
-        EC.element_to_be_clickable((By.ID, "update-btn"))  # ID anpassen!
+        EC.element_to_be_clickable((By.ID, "update-btn"))
     )
     update_button.click()
-    # Warten auf Flash-Message "Success" o. Ä.
     WebDriverWait(context.driver, 10).until(
         EC.text_to_be_present_in_element((By.ID, "flash_message"), "Success")  # ID anpassen!
     )
@@ -319,16 +352,6 @@ def step_impl(context):
 # We can then lowercase the name and prefix with pet_ to get the id
 ##################################################################
 
-#@then('I should see "{text_string}" in the "{element_name}" field')
-#def step_impl(context, text_string, element_name):
-    #element_id = ID_PREFIX + element_name.lower().replace(' ', '_')
-    #found = WebDriverWait(context.driver, context.wait_seconds).until(
-        #expected_conditions.text_to_be_present_in_element_value(
-            #(By.ID, element_id),
-            #text_string
-        #)
-    #)
-    #assert(found)
 
 @then('I should see "{text_string}" in the "{element_name}" field')
 def step_impl(context, text_string, element_name):
@@ -359,12 +382,6 @@ def step_impl(context, button_name):
     )
     button.click()
 
-#@then('I should see the message "{message}"')
-#def step_impl(context, message):
-    #flash = WebDriverWait(context.driver, 10).until(
-       #EC.visibility_of_element_located((By.ID, "flash_message"))
-    #)
-    #assert message in flash.text
 
 @then('I should see the message "{message_text}"')
 def step_impl(context, message_text):
@@ -380,3 +397,11 @@ def step_impl(context, message_text):
         print("DEBUG: Page source on timeout:")
         print(context.driver.page_source)
         raise AssertionError(f'Message "{message_text}" not found within timeout.')
+
+@then('I should not see "{product_name}" in the search results')
+def step_impl(context, product_name):
+    table = WebDriverWait(context.driver, 10).until(
+        EC.presence_of_element_located((By.ID, "search_results"))
+    )
+    assert product_name not in table.text, \
+        f'Produkt "{product_name}" wurde unerwartet in den Suchergebnissen gefunden.\n\nSuchergebnisse:\n{table.text}'
