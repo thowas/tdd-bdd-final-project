@@ -63,3 +63,22 @@ Scenario: Update a Product
     And I click the "Retrieve" button
     Then I should see the message "Success"
     And the "price" field should contain "79.95"
+
+Scenario: Reading a product
+    Given I create a product with
+    | name        | Hammer       |
+    | description | Claw hammer  |
+    | price       | 34.95        |
+    | available   | True         |
+    | category    | Tools        |
+    
+    And I store the product id
+    When I click the "Clear" button
+    And I enter the stored product id
+    And I click the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "Hammer" in the "Name" field
+    And I should see "Claw hammer" in the "Description" field
+    And I should see "True" in the "Available" dropdown
+    And I should see "Tools" in the "Category" dropdown
+    And I should see "34.95" in the "Price" field

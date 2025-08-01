@@ -76,6 +76,7 @@ def step_impl(context, element_name):
     element = context.driver.find_element(By.ID, element_id)
     assert(element.get_attribute('value') == u'')
 
+
 ##################################################################
 # These two function simulate copy and paste
 ##################################################################
