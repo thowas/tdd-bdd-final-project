@@ -123,3 +123,9 @@ Scenario: Search products by category
     Then I should see "Burger" in the search results
     And I should see "Fanta" in the search results
     And I should not see "Keyboard" in the search results
+
+Scenario: Search products by availability
+
+    When I select "True" in the "Available" dropdown
+    And I click the "Search" button
+    Then I should see only products where availability is True in the results

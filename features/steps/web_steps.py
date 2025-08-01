@@ -81,6 +81,19 @@ def step_impl(context, element_name):
     element = context.driver.find_element(By.ID, element_id)
     assert(element.get_attribute('value') == u'')
 
+@then(u'I should see only products where availability is True in the results')
+def step_impl(context):
+    table = WebDriverWait(context.driver, 10).until(
+        EC.presence_of_element_located((By.ID, "search_results"))
+    )
+    rows = table.find_elements(By.TAG_NAME, "tr")
+    # Annahme: erste Zeile ist Header
+    for row in rows[1:]:
+        cols = row.find_elements(By.TAG_NAME, "td")
+        # Annahme: Verfügbarkeit steht in der 4. Spalte (Index 3)
+        availability_text = cols[3].text.strip().lower()
+        assert availability_text == 'true', f"Produkt mit Verfügbarkeit '{availability_text}' gefunden, erwartet 'true'"
+
 
 ##################################################################
 # These two function simulate copy and paste

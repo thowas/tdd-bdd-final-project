@@ -28,11 +28,11 @@ import os
 import logging
 from decimal import Decimal
 from unittest import TestCase
-from service import app
-from service.common import status
 from service.models import db, init_db, Product
 from tests.factories import ProductFactory
 from urllib.parse import quote_plus
+from service.common import status
+from service import app
 
 
 # Disable all but critical errors during normal test run

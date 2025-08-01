@@ -19,11 +19,10 @@
 Product Store Service with UI
 """
 from flask import jsonify, request, abort
-from flask import url_for  # noqa: F401 pylint: disable=unused-import
-# from service.models import Product
-from service.common import status  # HTTP Status Codes
-from . import app
+from flask import url_for
+from service.common import status
 from service.models import Product, Category
+from . import app
 
 
 ######################################################################
